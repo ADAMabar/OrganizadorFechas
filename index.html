@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Tracker Pro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --border-bright: #323a54;
+    --text: #e8eaf0;
+    --text-muted: #6b7394;
+    --text-dim: #3d4560;
+    --blue: #3b82f6;
+    --blue-glow: rgba(59,130,246,0.25);
+    --red: #ef4444;
+    --red-glow: rgba(239,68,68,0.25);
+    --amber: #f59e0b;
+    --green: #10b981;
+    --green-glow: rgba(16,185,129,0.2);
+    --purple: #8b5cf6;
+    --radius: 12px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px 0;
+  }
+
+  /* ─── HEADER ─────────────────────────────── */
+  .header {
+    background: linear-gradient(180deg, #0f1320 0%, transparent 100%);
+    padding: 32px 40px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .logo h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7em;
+    color: var(--blue);
+    background: rgba(59,130,246,0.12);
+    border: 1px solid rgba(59,130,246,0.25);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8em;
+    color: var(--text-muted);
+    transition: border-color 0.2s;
+  }
+  .stat-pill .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  .stat-pill .count { font-weight: 700; color: var(--text); font-family: 'Space Mono', monospace; }
+
+  /* ─── TOOLBAR ─────────────────────────────── */
+  .toolbar {
+    padding: 20px 40px 0;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9em;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+  }
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+  }
+  .filter-tab {
+    padding: 7px 14px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    height: auto;
+  }
+  .filter-tab:hover { color: var(--text); background: var(--surface2); }
+  .filter-tab.active {
+    background: var(--border-bright);
+    color: var(--text);
+  }
+  .filter-tab.active.on-track { background: rgba(59,130,246,0.2); color: var(--blue); }
+  .filter-tab.active.critical  { background: rgba(239,68,68,0.18); color: var(--red); }
+  .filter-tab.active.expired   { background: rgba(107,115,148,0.2); color: var(--text-muted); }
+
+  /* ─── ADD TASK FORM ───────────────────────── */
+  .add-section {
+    padding: 24px 40px 0;
+  }
+  .add-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: auto;
+  }
+  .add-toggle-btn:hover { background: #2563eb; box-shadow: 0 0 16px var(--blue-glow); }
+
+  .form-panel {
+    margin-top: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    animation: slideDown 0.2s ease;
+  }
+  .form-panel.open { display: flex; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 14px;
+  }
+  .form-row-2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .field input, .field select, .field textarea {
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    width: 100%;
+  }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+  }
+  .field input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
+  }
+  .field select option { background: var(--surface2); }
+
+  .form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-primary {
+    padding: 10px 22px;
+    background: var(--blue);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: auto;
+  }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-ghost {
+    padding: 10px 18px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: auto;
+  }
+  .btn-ghost:hover { border-color: var(--border-bright); color: var(--text); }
+
+  /* ─── TASK LIST ───────────────────────────── */
+  .tasks-section {
+    padding: 20px 40px 0;
+  }
+  .section-label {
+    font-size: 0.75em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .task-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    position: relative;
+    overflow: visible;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: cardIn 0.25s ease;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .task-card:hover {
+    border-color: var(--border-bright);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  }
+  .task-card.is-critical { border-color: rgba(239,68,68,0.3); }
+  .task-card.is-expired  { opacity: 0.6; }
+
+  /* Red alert badge */
+  .alert-badge {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px; height: 18px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 10px var(--red-glow);
+    animation: pulse-badge 1.5s ease-in-out infinite;
+    display: none;
+    z-index: 10;
+  }
+  @keyframes pulse-badge {
+    0%,100% { transform: scale(1); box-shadow: 0 0 8px var(--red-glow); }
+    50%      { transform: scale(1.25); box-shadow: 0 0 16px rgba(239,68,68,0.6); }
+  }
+
+  /* Category accent bar */
+  .category-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+
+  .task-card-inner {
+    padding: 18px 20px;
+  }
+  .task-top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .task-info { flex: 1; min-width: 0; }
+  .task-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .task-name {
+    font-size: 1em;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .category-chip {
+    font-size: 0.7em;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .task-status-text {
+    font-size: 0.8em;
+    color: var(--text-muted);
+  }
+  .task-status-text.on-track { color: var(--blue); }
+  .task-status-text.critical  { color: var(--red); }
+  .task-status-text.expired   { color: var(--text-dim); }
+
+  .task-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    transition: all 0.15s;
+    padding: 0;
+  }
+  .icon-btn:hover { border-color: var(--border-bright); color: var(--text); background: var(--surface2); }
+  .icon-btn.del:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.1); }
+  .icon-btn.expand.open { background: var(--surface2); color: var(--text); border-color: var(--border-bright); }
+
+  /* ─── PROGRESS BAR ────────────────────────── */
+  .progress-wrap { position: relative; margin-bottom: 4px; }
+  .progress-bg {
+    width: 100%;
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    position: relative;
+    min-width: 4px;
+    background: linear-gradient(90deg, var(--blue) 0%, #60a5fa 100%);
+    transition: width 1s linear;
+    box-shadow: 0 0 8px var(--blue-glow);
+  }
+  .progress-fill.danger {
+    background: linear-gradient(90deg, var(--red) 0%, #f87171 100%);
+    box-shadow: 0 0 8px var(--red-glow);
+  }
+  .progress-fill.success {
+    background: linear-gradient(90deg, var(--green) 0%, #34d399 100%);
+    box-shadow: 0 0 8px var(--green-glow);
+  }
+
+  /* Tooltip bubble */
+  .bubble {
+    position: absolute;
+    top: -32px;
+    right: 0;
+    transform: translateX(50%);
+    background: var(--text);
+    color: var(--bg);
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 0.75em;
+    font-weight: 700;
+    white-space: nowrap;
+    font-family: 'Space Mono', monospace;
+    pointer-events: none;
+  }
+  .bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--text);
+    border-bottom: none;
+  }
+
+  /* ─── ADVANCED TIMELINE ───────────────────── */
+  .timeline-wrap {
+    position: relative;
+    margin-top: 18px;
+    padding-top: 8px;
+  }
+  /* Main track line */
+  .tl-track {
+    position: relative;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin: 0 0;
+  }
+  /* Filled portion of track */
+  .tl-filled {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s linear;
+    background: linear-gradient(90deg, var(--blue), #60a5fa);
+  }
+  .tl-filled.danger { background: linear-gradient(90deg, var(--red), #f87171); }
+
+  /* Optimal marker on track */
+  .tl-optimal-mark {
+    position: absolute;
+    top: -4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid var(--bg);
+    transform: translateX(-50%);
+    z-index: 3;
+    box-shadow: 0 0 6px var(--blue-glow);
+  }
+
+  /* NOW marker (triangle pointer) */
+  .tl-now {
+    position: absolute;
+    top: -6px;
+    z-index: 4;
+    transform: translateX(-50%);
+  }
+  .tl-now-diamond {
+    width: 16px; height: 16px;
+    background: white;
+    border: 2px solid var(--bg);
+    border-radius: 3px;
+    transform: rotate(45deg);
+    box-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* Tick labels row */
+  .tl-labels {
+    position: relative;
+    height: 42px;
+    margin-top: 4px;
+  }
+  .tl-label {
+    position: absolute;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+  }
+  .tl-label.start-lbl { transform: translateX(0); align-items: flex-start; }
+  .tl-label.end-lbl   { transform: translateX(-100%); align-items: flex-end; text-align: right; }
+  .tl-tick {
+    width: 1px;
+    height: 6px;
+    background: var(--border-bright);
+    margin-bottom: 4px;
+  }
+  .tl-lbl-name {
+    font-size: 0.7em;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .tl-lbl-date {
+    font-size: 0.65em;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+  }
+  /* Now label */
+  .tl-now-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 5;
+  }
+  .tl-now-tick { width: 1px; height: 6px; background: white; margin-bottom: 4px; }
+  .tl-now-text {
+    font-size: 0.65em;
+    font-weight: 700;
+    color: white;
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* Segment highlights */
+  .tl-segment-ok {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(59,130,246,0.08);
+    border-radius: 2px;
+  }
+  .tl-segment-warn {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(239,68,68,0.08);
+    border-radius: 2px;
+  }
+
+  /* ─── DETAILS PANEL ───────────────────────── */
+  .details-panel {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    background: var(--surface2);
+    border-radius: 0 0 var(--radius) var(--radius);
+    display: none;
+    animation: slideDown 0.18s ease;
+  }
+  .details-panel.open { display: block; }
+  .details-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .meta-label {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+  .meta-val { font-size: 0.85em; color: var(--text-muted); }
+
+  .details-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .notes-label {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+  }
+  .notes-text {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .notes-empty { font-style: italic; color: var(--text-dim); }
+
+  /* ─── EDIT MODAL ──────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: var(--radius);
+    padding: 28px;
+    width: 540px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    animation: slideDown 0.2s ease;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-title {
+    font-size: 1em;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    color: var(--text);
+  }
+  .modal-close {
+    width: 28px; height: 28px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1em;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; height: auto; min-width: 28px;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,0.1); }
+  .modal-form { display: flex; flex-direction: column; gap: 14px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+  /* ─── EMPTY STATE ─────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+    display: none;
+  }
+  .empty-state.show { display: block; }
+  .empty-icon { font-size: 2.5em; margin-bottom: 12px; opacity: 0.4; }
+  .empty-text { font-size: 0.9em; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* ─── RESPONSIVE ──────────────────────────── */
+  @media (max-width: 700px) {
+    .header { padding: 20px 18px 16px; }
+    .toolbar, .add-section, .tasks-section { padding-left: 18px; padding-right: 18px; }
+    .form-row { grid-template-columns: 1fr; }
+    .details-meta { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <h1>Task Tracker</h1>
+      <span>PRO</span>
+    </div>
+    <div class="stats-row" id="statsRow"></div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrapper">
+    <span class="search-icon">⌕</span>
+    <input class="search-input" id="searchInput" placeholder="Buscar tareas…" oninput="applyFilters()">
+  </div>
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all"       onclick="setFilter('all',this)">Todas</button>
+    <button class="filter-tab" data-filter="on-track" onclick="setFilter('on-track',this)">A tiempo</button>
+    <button class="filter-tab" data-filter="critical"  onclick="setFilter('critical',this)">Críticas</button>
+    <button class="filter-tab" data-filter="expired"   onclick="setFilter('expired',this)">Vencidas</button>
+  </div>
+</div>
+
+<!-- ADD SECTION -->
+<div class="add-section">
+  <button class="add-toggle-btn" onclick="toggleForm()">
+    <span id="formToggleIcon">＋</span> <span id="formToggleText">Nueva Tarea</span>
+  </button>
+  <div class="form-panel" id="addFormPanel">
+    <div class="form-row">
+      <div class="field">
+        <label>Nombre de la tarea</label>
+        <input type="text" id="taskName" placeholder="Ej: Entregar informe Q3">
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select id="taskCategory">
+          <option value="sin categoría">Sin categoría</option>
+          <option value="trabajo">Trabajo</option>
+          <option value="personal">Personal</option>
+          <option value="proyecto">Proyecto</option>
+          <option value="estudio">Estudio</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="field"><!-- spacer --></div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Fecha Óptima (Meta)</label>
+        <input type="datetime-local" id="optimalDate">
+      </div>
+      <div class="field">
+        <label>Fecha Límite (Final)</label>
+        <input type="datetime-local" id="limitDate">
+      </div>
+      <div class="field"><!-- spacer --></div>
+    </div>
+    <div class="field">
+      <label>Detalles / Notas</label>
+      <textarea id="taskDetails" placeholder="Añade contexto, pasos, recursos…"></textarea>
+    </div>
+    <div class="form-actions">
+      <button class="btn-ghost" onclick="toggleForm()">Cancelar</button>
+      <button class="btn-primary" onclick="addTask()">Crear Tarea</button>
+    </div>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="tasks-section">
+  <div class="section-label" id="listLabel">0 tareas</div>
+  <div id="tasksList"></div>
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">◻</div>
+    <div class="empty-text">No hay tareas que mostrar</div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Editar Tarea</div>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-form">
+      <input type="hidden" id="editId">
+      <div class="field">
+        <label>Nombre de la tarea</label>
+        <input type="text" id="editName" placeholder="Nombre…">
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select id="editCategory">
+          <option value="sin categoría">Sin categoría</option>
+          <option value="trabajo">Trabajo</option>
+          <option value="personal">Personal</option>
+          <option value="proyecto">Proyecto</option>
+          <option value="estudio">Estudio</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Fecha Óptima (Meta)</label>
+        <input type="datetime-local" id="editOptimal">
+      </div>
+      <div class="field">
+        <label>Fecha Límite (Final)</label>
+        <input type="datetime-local" id="editLimit">
+      </div>
+      <div class="field">
+        <label>Detalles / Notas</label>
+        <textarea id="editDetails" placeholder="Añade contexto, pasos, recursos…"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeEdit()">Cancelar</button>
+        <button class="btn-primary" onclick="saveEdit()">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  ESTADO
+// ─────────────────────────────────────────────
+let tasks   = [];
+let currentFilter = 'all';
+let openDetails   = new Set(); // ids con panel de detalles abierto
+
+const CATEGORY_COLORS = {
+  'trabajo':      { bg:'rgba(59,130,246,0.15)',  text:'#60a5fa',  bar:'#3b82f6' },
+  'personal':     { bg:'rgba(16,185,129,0.15)',  text:'#34d399',  bar:'#10b981' },
+  'proyecto':     { bg:'rgba(139,92,246,0.15)',  text:'#a78bfa',  bar:'#8b5cf6' },
+  'estudio':      { bg:'rgba(245,158,11,0.15)',  text:'#fcd34d',  bar:'#f59e0b' },
+  'urgente':      { bg:'rgba(239,68,68,0.18)',   text:'#f87171',  bar:'#ef4444' },
+  'sin categoría':{ bg:'rgba(107,115,148,0.12)', text:'#6b7394',  bar:'#3d4560' },
+};
+
+// ─────────────────────────────────────────────
+//  PERSISTENCIA
+// ─────────────────────────────────────────────
+function load()  { const s = localStorage.getItem('taskTrackerPro_v2'); if(s) tasks = JSON.parse(s); }
+function save()  { localStorage.setItem('taskTrackerPro_v2', JSON.stringify(tasks)); }
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function fmtDate(ms) {
+  const d = new Date(ms);
+  return d.toLocaleString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function fmtDateInput(ms) {
+  // Returns YYYY-MM-DDTHH:MM for datetime-local input
+  const d = new Date(ms);
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtCountdown(diffMs) {
+  if (diffMs <= 0) return '¡Vencido!';
+  const days  = Math.floor(diffMs / 86400000);
+  const hours = Math.floor((diffMs % 86400000) / 3600000);
+  const mins  = Math.floor((diffMs % 3600000)  / 60000);
+  const secs  = Math.floor((diffMs % 60000)    / 1000);
+  let s = '';
+  if (days  > 0) s += `${days}d `;
+  s += `${hours}h ${mins}m ${secs}s`;
+  return s;
+}
+function taskStatus(task, now) {
+  if (now > task.limitTime)   return 'expired';
+  if (now > task.optimalTime) return 'critical';
+  return 'on-track';
+}
+function timeToRef(task, now) {
+  // used for sorting: time remaining to the nearest relevant deadline
+  const s = taskStatus(task, now);
+  if (s === 'expired')  return Infinity;
+  if (s === 'critical') return task.limitTime - now;
+  return task.optimalTime - now;
+}
+
+// ─────────────────────────────────────────────
+//  UI FORM TOGGLE
+// ─────────────────────────────────────────────
+function toggleForm() {
+  const panel = document.getElementById('addFormPanel');
+  const isOpen = panel.classList.toggle('open');
+  document.getElementById('formToggleIcon').textContent = isOpen ? '−' : '＋';
+  document.getElementById('formToggleText').textContent = isOpen ? 'Cerrar' : 'Nueva Tarea';
+}
+
+// ─────────────────────────────────────────────
+//  ADD TASK
+// ─────────────────────────────────────────────
+function addTask() {
+  const name     = document.getElementById('taskName').value.trim();
+  const category = document.getElementById('taskCategory').value;
+  const optimal  = document.getElementById('optimalDate').value;
+  const limit    = document.getElementById('limitDate').value;
+  const details  = document.getElementById('taskDetails').value.trim();
+
+  if (!name || !optimal || !limit) { alert('Por favor rellena nombre y fechas.'); return; }
+
+  const now         = Date.now();
+  const optimalTime = new Date(optimal).getTime();
+  const limitTime   = new Date(limit).getTime();
+
+  if (optimalTime >= limitTime) { alert('La fecha óptima debe ser anterior a la límite.'); return; }
+
+  tasks.push({ id: now, name, category, startTime: now, optimalTime, limitTime, details });
+  save();
+  applyFilters();
+
+  // Reset form
+  ['taskName','optimalDate','limitDate','taskDetails'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('taskCategory').value = 'sin categoría';
+  toggleForm();
+}
+
+// ─────────────────────────────────────────────
+//  DELETE
+// ─────────────────────────────────────────────
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  openDetails.delete(id);
+  save();
+  applyFilters();
+}
+
+// ─────────────────────────────────────────────
+//  EDIT
+// ─────────────────────────────────────────────
+function openEdit(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('editId').value       = id;
+  document.getElementById('editName').value     = t.name;
+  document.getElementById('editCategory').value = t.category || 'sin categoría';
+  document.getElementById('editOptimal').value  = fmtDateInput(t.optimalTime);
+  document.getElementById('editLimit').value    = fmtDateInput(t.limitTime);
+  document.getElementById('editDetails').value  = t.details || '';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEdit() { document.getElementById('editModal').classList.remove('open'); }
+function saveEdit() {
+  const id       = parseInt(document.getElementById('editId').value);
+  const name     = document.getElementById('editName').value.trim();
+  const category = document.getElementById('editCategory').value;
+  const optimal  = document.getElementById('editOptimal').value;
+  const limit    = document.getElementById('editLimit').value;
+  const details  = document.getElementById('editDetails').value.trim();
+
+  if (!name || !optimal || !limit) { alert('Rellena todos los campos.'); return; }
+  const optimalTime = new Date(optimal).getTime();
+  const limitTime   = new Date(limit).getTime();
+  if (optimalTime >= limitTime) { alert('La fecha óptima debe ser anterior a la límite.'); return; }
+
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.name = name; t.category = category; t.optimalTime = optimalTime; t.limitTime = limitTime; t.details = details; }
+  save();
+  closeEdit();
+  applyFilters();
+}
+// Close modal on backdrop click
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEdit();
+});
+
+// ─────────────────────────────────────────────
+//  DETAILS TOGGLE
+// ─────────────────────────────────────────────
+function toggleDetails(id) {
+  if (openDetails.has(id)) openDetails.delete(id);
+  else openDetails.add(id);
+  const panel = document.getElementById(`details-${id}`);
+  const btn   = document.getElementById(`expandBtn-${id}`);
+  if (!panel) return;
+  panel.classList.toggle('open', openDetails.has(id));
+  if (btn) btn.classList.toggle('open', openDetails.has(id));
+}
+
+// ─────────────────────────────────────────────
+//  FILTERS
+// ─────────────────────────────────────────────
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tab').forEach(b => {
+    b.classList.remove('active','on-track','critical','expired');
+  });
+  el.classList.add('active');
+  if (f !== 'all') el.classList.add(f);
+  applyFilters();
+}
+
+function applyFilters() {
+  const query = (document.getElementById('searchInput').value || '').toLowerCase();
+  const now   = Date.now();
+
+  let filtered = tasks.filter(t => {
+    const s = taskStatus(t, now);
+    if (currentFilter === 'on-track' && s !== 'on-track') return false;
+    if (currentFilter === 'critical'  && s !== 'critical')  return false;
+    if (currentFilter === 'expired'   && s !== 'expired')   return false;
+    if (query && !t.name.toLowerCase().includes(query) &&
+        !(t.details||'').toLowerCase().includes(query) &&
+        !(t.category||'').toLowerCase().includes(query)) return false;
+    return true;
+  });
+
+  // Sort: least time remaining first (expired always at bottom)
+  filtered.sort((a,b) => {
+    const sa = taskStatus(a,now), sb = taskStatus(b,now);
+    if (sa === 'expired' && sb !== 'expired') return 1;
+    if (sb === 'expired' && sa !== 'expired') return -1;
+    return timeToRef(a,now) - timeToRef(b,now);
+  });
+
+  renderList(filtered);
+  updateStats();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function renderList(list) {
+  const container = document.getElementById('tasksList');
+  const empty     = document.getElementById('emptyState');
+  const label     = document.getElementById('listLabel');
+
+  container.innerHTML = '';
+  label.textContent = `${list.length} tarea${list.length !== 1 ? 's' : ''}`;
+
+  if (list.length === 0) {
+    empty.classList.add('show');
+    return;
+  }
+  empty.classList.remove('show');
+
+  const now = Date.now();
+  list.forEach(task => {
+    const status     = taskStatus(task, now);
+    const cat        = CATEGORY_COLORS[task.category] || CATEGORY_COLORS['sin categoría'];
+    const total      = task.limitTime - task.startTime;
+    const optPct     = Math.min(100, ((task.optimalTime - task.startTime) / total) * 100);
+    const isUrgent   = status !== 'expired' && (task.limitTime - now) <= 86400000;
+    const detailOpen = openDetails.has(task.id);
+
+    let statusClass='on-track', statusLabel='A tiempo (hacia óptima)';
+    if (status === 'critical') { statusClass='critical'; statusLabel='Fase crítica (hacia límite)'; }
+    if (status === 'expired')  { statusClass='expired';  statusLabel='Vencida'; }
+
+    const html = `
+<div class="task-card ${status === 'critical' ? 'is-critical' : ''} ${status === 'expired' ? 'is-expired' : ''}" id="card-${task.id}">
+  <div class="alert-badge" id="badge-${task.id}" ${isUrgent ? 'style="display:block"' : ''}></div>
+  <div class="category-bar" style="background:${cat.bar}"></div>
+  <div class="task-card-inner">
+    <div class="task-top-row">
+      <div class="task-info">
+        <div class="task-name-row">
+          <div class="task-name" title="${task.name}">${task.name}</div>
+          <div class="category-chip" style="background:${cat.bg};color:${cat.text}">${task.category||'sin categoría'}</div>
+        </div>
+        <div class="task-status-text ${statusClass}" id="status-${task.id}">${statusLabel}</div>
+      </div>
+      <div class="task-actions">
+        <button class="icon-btn expand ${detailOpen?'open':''}" id="expandBtn-${task.id}" title="Ver detalles" onclick="toggleDetails(${task.id})">☰</button>
+        <button class="icon-btn" title="Editar" onclick="openEdit(${task.id})">✎</button>
+        <button class="icon-btn del" title="Eliminar" onclick="deleteTask(${task.id})">✕</button>
+      </div>
+    </div>
+
+    <!-- Barra de progreso -->
+    <div class="progress-wrap">
+      <div class="progress-bg">
+        <div class="progress-fill ${status==='critical'||status==='expired'?'danger':''}" id="fill-${task.id}">
+          <div class="bubble" id="bubble-${task.id}">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline avanzado -->
+    <div class="timeline-wrap" id="tl-${task.id}">
+      <div class="tl-track">
+        <div class="tl-segment-ok"  style="left:0;width:${optPct}%"></div>
+        <div class="tl-segment-warn" style="left:${optPct}%;width:${100-optPct}%"></div>
+        <div class="tl-filled ${status==='critical'||status==='expired'?'danger':''}" id="tlfilled-${task.id}"></div>
+        <div class="tl-optimal-mark" style="left:${optPct}%" title="Meta óptima"></div>
+        <div class="tl-now" id="tlnow-${task.id}"><div class="tl-now-diamond"></div></div>
+      </div>
+      <div class="tl-labels">
+        <div class="tl-label start-lbl" style="left:0%">
+          <div class="tl-tick"></div>
+          <div class="tl-lbl-name">Inicio</div>
+          <div class="tl-lbl-date">${fmtDate(task.startTime)}</div>
+        </div>
+        <div class="tl-label" style="left:${optPct}%;${optPct < 15 ? 'transform:translateX(0);align-items:flex-start' : optPct > 85 ? 'transform:translateX(-100%);align-items:flex-end;text-align:right' : ''}">
+          <div class="tl-tick" style="background:var(--blue)"></div>
+          <div class="tl-lbl-name" style="color:var(--blue)">Óptima</div>
+          <div class="tl-lbl-date">${fmtDate(task.optimalTime)}</div>
+        </div>
+        <div class="tl-label end-lbl" style="left:100%">
+          <div class="tl-tick" style="background:var(--red)"></div>
+          <div class="tl-lbl-name" style="color:var(--red)">Límite</div>
+          <div class="tl-lbl-date">${fmtDate(task.limitTime)}</div>
+        </div>
+        <div class="tl-now-label" id="tlnow-lbl-${task.id}">
+          <div class="tl-now-tick"></div>
+          <div class="tl-now-text">ahora</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details panel -->
+  <div class="details-panel ${detailOpen?'open':''}" id="details-${task.id}">
+    <div class="details-meta">
+      <div class="meta-item">
+        <div class="meta-label">Inicio</div>
+        <div class="meta-val">${fmtDate(task.startTime)}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Meta óptima</div>
+        <div class="meta-val" style="color:var(--blue)">${fmtDate(task.optimalTime)}</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Fecha límite</div>
+        <div class="meta-val" style="color:var(--red)">${fmtDate(task.limitTime)}</div>
+      </div>
+    </div>
+    <div class="details-notes">
+      <div class="notes-label">Notas</div>
+      ${task.details
+        ? `<div class="notes-text">${task.details.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`
+        : `<div class="notes-empty">Sin notas añadidas.</div>`}
+    </div>
+  </div>
+</div>`;
+    container.insertAdjacentHTML('beforeend', html);
+  });
+
+  updateBars(list);
+}
+
+// ─────────────────────────────────────────────
+//  TICK UPDATE (1s)
+// ─────────────────────────────────────────────
+function updateBars(list) {
+  const source = list || tasks;
+  const now    = Date.now();
+
+  source.forEach(task => {
+    const fill    = document.getElementById(`fill-${task.id}`);
+    const bubble  = document.getElementById(`bubble-${task.id}`);
+    const statusEl= document.getElementById(`status-${task.id}`);
+    const tlFill  = document.getElementById(`tlfilled-${task.id}`);
+    const tlNow   = document.getElementById(`tlnow-${task.id}`);
+    const tlNowLbl= document.getElementById(`tlnow-lbl-${task.id}`);
+    const badge   = document.getElementById(`badge-${task.id}`);
+    if (!fill) return;
+
+    const total   = task.limitTime - task.startTime;
+    const elapsed = now - task.startTime;
+    let pct       = Math.max(0.5, Math.min(100, (elapsed / total) * 100));
+
+    fill.style.width = `${pct}%`;
+    if (tlFill) tlFill.style.width = `${pct}%`;
+    if (tlNow)  { tlNow.style.left = `${pct}%`; }
+    if (tlNowLbl) tlNowLbl.style.left = `${pct}%`;
+
+    const s        = taskStatus(task, now);
+    const leftOpt  = task.optimalTime - now;
+    const leftLim  = task.limitTime   - now;
+    const isUrgent = s !== 'expired' && leftLim <= 86400000;
+
+    // Urgency badge
+    if (badge) badge.style.display = isUrgent ? 'block' : 'none';
+
+    // Color classes
+    fill.classList.toggle('danger',   s === 'critical' || s === 'expired');
+    fill.classList.toggle('success',  false);
+    if (tlFill) { tlFill.classList.toggle('danger', s === 'critical' || s === 'expired'); }
+
+    // Bubble + status text
+    if (s === 'expired') {
+      bubble.textContent = '¡Vencida!';
+      if (statusEl) { statusEl.textContent = 'Vencida'; statusEl.className = 'task-status-text expired'; }
+    } else if (s === 'critical') {
+      bubble.textContent = fmtCountdown(leftLim);
+      if (statusEl) { statusEl.textContent = 'Fase crítica (hacia límite)'; statusEl.className = 'task-status-text critical'; }
+    } else {
+      bubble.textContent = fmtCountdown(leftOpt);
+      if (statusEl) { statusEl.textContent = 'A tiempo (hacia óptima)'; statusEl.className = 'task-status-text on-track'; }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+//  STATS
+// ─────────────────────────────────────────────
+function updateStats() {
+  const now     = Date.now();
+  const onTrack = tasks.filter(t => taskStatus(t,now) === 'on-track').length;
+  const crit    = tasks.filter(t => taskStatus(t,now) === 'critical').length;
+  const expired = tasks.filter(t => taskStatus(t,now) === 'expired').length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-pill"><div class="dot" style="background:#3b82f6"></div> <span class="count">${onTrack}</span> a tiempo</div>
+    <div class="stat-pill"><div class="dot" style="background:#ef4444"></div> <span class="count">${crit}</span> críticas</div>
+    <div class="stat-pill"><div class="dot" style="background:#3d4560"></div> <span class="count">${expired}</span> vencidas</div>
+  `;
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+let _lastFiltered = [];
+load();
+applyFilters();
+
+setInterval(() => {
+  updateBars(tasks);
+  updateStats();
+  // re-sort silently every 10s to keep order current
+}, 1000);
+
+// Re-apply filters every 10s to handle sort-order changes
+setInterval(applyFilters, 10000);
+</script>
+</body>
+</html>
