@@ -139,6 +139,28 @@
     border-color: var(--blue);
     box-shadow: 0 0 0 3px var(--blue-glow);
   }
+
+  /* Category filter select */
+  .category-filter-select {
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85em;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 140px;
+  }
+  .category-filter-select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+  }
+  .category-filter-select option { background: var(--surface2); color: var(--text); }
+
   .filter-tabs {
     display: flex;
     gap: 4px;
@@ -404,14 +426,19 @@
   .icon-btn.expand.open { background: var(--surface2); color: var(--text); border-color: var(--border-bright); }
 
   /* ─── PROGRESS BAR ────────────────────────── */
-  .progress-wrap { position: relative; margin-bottom: 4px; }
+  .progress-wrap {
+    position: relative;
+    margin-bottom: 4px;
+    /* Espacio extra arriba para que el bocadillo no quede cortado */
+    padding-top: 38px;
+  }
   .progress-bg {
     width: 100%;
     height: 10px;
     background: var(--surface2);
     border-radius: 5px;
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* permite que el bocadillo sobresalga */
   }
   .progress-fill {
     height: 100%;
@@ -421,6 +448,7 @@
     background: linear-gradient(90deg, var(--blue) 0%, #60a5fa 100%);
     transition: width 1s linear;
     box-shadow: 0 0 8px var(--blue-glow);
+    overflow: visible;
   }
   .progress-fill.danger {
     background: linear-gradient(90deg, var(--red) 0%, #f87171 100%);
@@ -431,32 +459,71 @@
     box-shadow: 0 0 8px var(--green-glow);
   }
 
-  /* Tooltip bubble */
-  .bubble {
+  /* ─── BOCADILLO DE FECHA LÍMITE ──────────────
+     Flotante en el extremo derecho de la barra,
+     siempre legible, muestra tiempo hasta LÍMITE */
+  .deadline-bubble {
     position: absolute;
-    top: -32px;
+    /* se posiciona a la derecha del fill */
     right: 0;
+    top: -34px;
     transform: translateX(50%);
-    background: var(--text);
-    color: var(--bg);
-    padding: 3px 9px;
-    border-radius: 4px;
-    font-size: 0.75em;
+    background: #ef4444;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.72em;
     font-weight: 700;
     white-space: nowrap;
     font-family: 'Space Mono', monospace;
     pointer-events: none;
+    box-shadow: 0 2px 10px rgba(239,68,68,0.45);
+    z-index: 20;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
   }
-  .bubble::after {
+  .deadline-bubble.ok {
+    background: #3b82f6;
+    box-shadow: 0 2px 10px rgba(59,130,246,0.45);
+  }
+  .deadline-bubble.expired-bub {
+    background: #3d4560;
+    box-shadow: none;
+  }
+  /* La flechita del bocadillo apuntando hacia abajo */
+  .deadline-bubble::after {
     content: '';
     position: absolute;
-    bottom: -4px;
+    bottom: -5px;
     left: 50%;
     transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: var(--text);
+    border: 5px solid transparent;
+    border-top-color: inherit; /* hereda el color del padre via currentColor truco */
     border-bottom: none;
   }
+  /* Fix: usar pseudo-element con color explícito */
+  .deadline-bubble.ok::after      { border-top-color: #3b82f6; }
+  .deadline-bubble.expired-bub::after { border-top-color: #3d4560; }
+
+  /* Label pequeño encima del bocadillo */
+  .deadline-bubble .bub-label {
+    display: block;
+    font-size: 0.7em;
+    font-weight: 400;
+    opacity: 0.75;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+  .deadline-bubble .bub-time {
+    display: block;
+    font-size: 1em;
+    font-weight: 700;
+  }
+
+  /* Tooltip del progreso (burbuja antigua — la mantenemos pero la ocultamos,
+     ahora usamos deadline-bubble) */
+  .bubble { display: none !important; }
 
   /* ─── ADVANCED TIMELINE ───────────────────── */
   .timeline-wrap {
@@ -464,7 +531,6 @@
     margin-top: 18px;
     padding-top: 8px;
   }
-  /* Main track line */
   .tl-track {
     position: relative;
     height: 4px;
@@ -472,7 +538,6 @@
     border-radius: 2px;
     margin: 0 0;
   }
-  /* Filled portion of track */
   .tl-filled {
     position: absolute;
     left: 0;
@@ -484,7 +549,6 @@
   }
   .tl-filled.danger { background: linear-gradient(90deg, var(--red), #f87171); }
 
-  /* Optimal marker on track */
   .tl-optimal-mark {
     position: absolute;
     top: -4px;
@@ -498,7 +562,6 @@
     box-shadow: 0 0 6px var(--blue-glow);
   }
 
-  /* NOW marker (triangle pointer) */
   .tl-now {
     position: absolute;
     top: -6px;
@@ -514,7 +577,6 @@
     box-shadow: 0 0 8px rgba(255,255,255,0.3);
   }
 
-  /* Tick labels row */
   .tl-labels {
     position: relative;
     height: 42px;
@@ -548,7 +610,6 @@
     font-family: 'Space Mono', monospace;
     white-space: nowrap;
   }
-  /* Now label */
   .tl-now-label {
     position: absolute;
     top: 0;
@@ -567,7 +628,6 @@
     white-space: nowrap;
   }
 
-  /* Segment highlights */
   .tl-segment-ok {
     position: absolute;
     top: 0;
@@ -727,6 +787,21 @@
     <span class="search-icon">⌕</span>
     <input class="search-input" id="searchInput" placeholder="Buscar tareas…" oninput="applyFilters()">
   </div>
+
+  <!-- Filtro por categoría -->
+  <select class="category-filter-select" id="categoryFilter" onchange="applyFilters()">
+    <option value="all">📚 Todos los módulos</option>
+    <option value="DWEC">DWEC</option>
+    <option value="DWES">DWES</option>
+    <option value="DIW">DIW</option>
+    <option value="DAW">DAW</option>
+    <option value="Inglés">Inglés</option>
+    <option value="IPE">IPE</option>
+    <option value="OPTATIVA">OPTATIVA</option>
+    <option value="PROYECTO">PROYECTO</option>
+    <option value="SOSTENIBILIDAD">SOSTENIBILIDAD</option>
+  </select>
+
   <div class="filter-tabs">
     <button class="filter-tab active" data-filter="all"       onclick="setFilter('all',this)">Todas</button>
     <button class="filter-tab" data-filter="on-track" onclick="setFilter('on-track',this)">A tiempo</button>
@@ -744,17 +819,20 @@
     <div class="form-row">
       <div class="field">
         <label>Nombre de la tarea</label>
-        <input type="text" id="taskName" placeholder="Ej: Entregar informe Q3">
+        <input type="text" id="taskName" placeholder="Ej: Entregar práctica DWEC">
       </div>
       <div class="field">
-        <label>Categoría</label>
+        <label>Módulo</label>
         <select id="taskCategory">
-          <option value="sin categoría">Sin categoría</option>
-          <option value="trabajo">Trabajo</option>
-          <option value="personal">Personal</option>
-          <option value="proyecto">Proyecto</option>
-          <option value="estudio">Estudio</option>
-          <option value="urgente">Urgente</option>
+          <option value="DWEC">DWEC</option>
+          <option value="DWES">DWES</option>
+          <option value="DIW">DIW</option>
+          <option value="DAW">DAW</option>
+          <option value="Inglés">Inglés</option>
+          <option value="IPE">IPE</option>
+          <option value="OPTATIVA">OPTATIVA</option>
+          <option value="PROYECTO">PROYECTO</option>
+          <option value="SOSTENIBILIDAD">SOSTENIBILIDAD</option>
         </select>
       </div>
       <div class="field"><!-- spacer --></div>
@@ -805,14 +883,17 @@
         <input type="text" id="editName" placeholder="Nombre…">
       </div>
       <div class="field">
-        <label>Categoría</label>
+        <label>Módulo</label>
         <select id="editCategory">
-          <option value="sin categoría">Sin categoría</option>
-          <option value="trabajo">Trabajo</option>
-          <option value="personal">Personal</option>
-          <option value="proyecto">Proyecto</option>
-          <option value="estudio">Estudio</option>
-          <option value="urgente">Urgente</option>
+          <option value="DWEC">DWEC</option>
+          <option value="DWES">DWES</option>
+          <option value="DIW">DIW</option>
+          <option value="DAW">DAW</option>
+          <option value="Inglés">Inglés</option>
+          <option value="IPE">IPE</option>
+          <option value="OPTATIVA">OPTATIVA</option>
+          <option value="PROYECTO">PROYECTO</option>
+          <option value="SOSTENIBILIDAD">SOSTENIBILIDAD</option>
         </select>
       </div>
       <div class="field">
@@ -841,22 +922,28 @@
 // ─────────────────────────────────────────────
 let tasks   = [];
 let currentFilter = 'all';
-let openDetails   = new Set(); // ids con panel de detalles abierto
+let openDetails   = new Set();
 
+// Colores por módulo DAW
 const CATEGORY_COLORS = {
-  'trabajo':      { bg:'rgba(59,130,246,0.15)',  text:'#60a5fa',  bar:'#3b82f6' },
-  'personal':     { bg:'rgba(16,185,129,0.15)',  text:'#34d399',  bar:'#10b981' },
-  'proyecto':     { bg:'rgba(139,92,246,0.15)',  text:'#a78bfa',  bar:'#8b5cf6' },
-  'estudio':      { bg:'rgba(245,158,11,0.15)',  text:'#fcd34d',  bar:'#f59e0b' },
-  'urgente':      { bg:'rgba(239,68,68,0.18)',   text:'#f87171',  bar:'#ef4444' },
-  'sin categoría':{ bg:'rgba(107,115,148,0.12)', text:'#6b7394',  bar:'#3d4560' },
+  'DWEC':           { bg:'rgba(59,130,246,0.15)',  text:'#60a5fa',  bar:'#3b82f6' },
+  'DWES':           { bg:'rgba(16,185,129,0.15)',  text:'#34d399',  bar:'#10b981' },
+  'DIW':            { bg:'rgba(139,92,246,0.15)',  text:'#a78bfa',  bar:'#8b5cf6' },
+  'DAW':            { bg:'rgba(245,158,11,0.15)',  text:'#fcd34d',  bar:'#f59e0b' },
+  'Inglés':         { bg:'rgba(236,72,153,0.15)',  text:'#f472b6',  bar:'#ec4899' },
+  'IPE':            { bg:'rgba(20,184,166,0.15)',  text:'#2dd4bf',  bar:'#14b8a6' },
+  'OPTATIVA':       { bg:'rgba(249,115,22,0.15)',  text:'#fb923c',  bar:'#f97316' },
+  'PROYECTO':       { bg:'rgba(239,68,68,0.18)',   text:'#f87171',  bar:'#ef4444' },
+  'SOSTENIBILIDAD': { bg:'rgba(34,197,94,0.15)',   text:'#4ade80',  bar:'#22c55e' },
 };
+// Fallback
+const DEFAULT_CAT = { bg:'rgba(107,115,148,0.12)', text:'#6b7394', bar:'#3d4560' };
 
 // ─────────────────────────────────────────────
 //  PERSISTENCIA
 // ─────────────────────────────────────────────
-function load()  { const s = localStorage.getItem('taskTrackerPro_v2'); if(s) tasks = JSON.parse(s); }
-function save()  { localStorage.setItem('taskTrackerPro_v2', JSON.stringify(tasks)); }
+function load()  { const s = localStorage.getItem('taskTrackerPro_v3'); if(s) tasks = JSON.parse(s); }
+function save()  { localStorage.setItem('taskTrackerPro_v3', JSON.stringify(tasks)); }
 
 // ─────────────────────────────────────────────
 //  HELPERS
@@ -866,11 +953,16 @@ function fmtDate(ms) {
   return d.toLocaleString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
 }
 function fmtDateInput(ms) {
-  // Returns YYYY-MM-DDTHH:MM for datetime-local input
   const d = new Date(ms);
   const pad = n => String(n).padStart(2,'0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+
+/**
+ * Formatea un diff en ms como "Xd Xh Xm Xs"
+ * si quedan menos de 24h → sólo "Xh Xm Xs"
+ * si quedan menos de 1h  → sólo "Xm Xs"
+ */
 function fmtCountdown(diffMs) {
   if (diffMs <= 0) return '¡Vencido!';
   const days  = Math.floor(diffMs / 86400000);
@@ -879,16 +971,16 @@ function fmtCountdown(diffMs) {
   const secs  = Math.floor((diffMs % 60000)    / 1000);
   let s = '';
   if (days  > 0) s += `${days}d `;
-  s += `${hours}h ${mins}m ${secs}s`;
+  s += `${String(hours).padStart(2,'0')}h ${String(mins).padStart(2,'0')}m ${String(secs).padStart(2,'0')}s`;
   return s;
 }
+
 function taskStatus(task, now) {
   if (now > task.limitTime)   return 'expired';
   if (now > task.optimalTime) return 'critical';
   return 'on-track';
 }
 function timeToRef(task, now) {
-  // used for sorting: time remaining to the nearest relevant deadline
   const s = taskStatus(task, now);
   if (s === 'expired')  return Infinity;
   if (s === 'critical') return task.limitTime - now;
@@ -927,9 +1019,8 @@ function addTask() {
   save();
   applyFilters();
 
-  // Reset form
   ['taskName','optimalDate','limitDate','taskDetails'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('taskCategory').value = 'sin categoría';
+  document.getElementById('taskCategory').value = 'DWEC';
   toggleForm();
 }
 
@@ -951,7 +1042,7 @@ function openEdit(id) {
   if (!t) return;
   document.getElementById('editId').value       = id;
   document.getElementById('editName').value     = t.name;
-  document.getElementById('editCategory').value = t.category || 'sin categoría';
+  document.getElementById('editCategory').value = t.category || 'DWEC';
   document.getElementById('editOptimal').value  = fmtDateInput(t.optimalTime);
   document.getElementById('editLimit').value    = fmtDateInput(t.limitTime);
   document.getElementById('editDetails').value  = t.details || '';
@@ -977,7 +1068,6 @@ function saveEdit() {
   closeEdit();
   applyFilters();
 }
-// Close modal on backdrop click
 document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === document.getElementById('editModal')) closeEdit();
 });
@@ -1009,21 +1099,22 @@ function setFilter(f, el) {
 }
 
 function applyFilters() {
-  const query = (document.getElementById('searchInput').value || '').toLowerCase();
-  const now   = Date.now();
+  const query    = (document.getElementById('searchInput').value || '').toLowerCase();
+  const catFilt  = document.getElementById('categoryFilter').value;
+  const now      = Date.now();
 
   let filtered = tasks.filter(t => {
     const s = taskStatus(t, now);
     if (currentFilter === 'on-track' && s !== 'on-track') return false;
     if (currentFilter === 'critical'  && s !== 'critical')  return false;
     if (currentFilter === 'expired'   && s !== 'expired')   return false;
+    if (catFilt !== 'all' && t.category !== catFilt) return false;
     if (query && !t.name.toLowerCase().includes(query) &&
         !(t.details||'').toLowerCase().includes(query) &&
         !(t.category||'').toLowerCase().includes(query)) return false;
     return true;
   });
 
-  // Sort: least time remaining first (expired always at bottom)
   filtered.sort((a,b) => {
     const sa = taskStatus(a,now), sb = taskStatus(b,now);
     if (sa === 'expired' && sb !== 'expired') return 1;
@@ -1055,7 +1146,7 @@ function renderList(list) {
   const now = Date.now();
   list.forEach(task => {
     const status     = taskStatus(task, now);
-    const cat        = CATEGORY_COLORS[task.category] || CATEGORY_COLORS['sin categoría'];
+    const cat        = CATEGORY_COLORS[task.category] || DEFAULT_CAT;
     const total      = task.limitTime - task.startTime;
     const optPct     = Math.min(100, ((task.optimalTime - task.startTime) / total) * 100);
     const isUrgent   = status !== 'expired' && (task.limitTime - now) <= 86400000;
@@ -1064,6 +1155,21 @@ function renderList(list) {
     let statusClass='on-track', statusLabel='A tiempo (hacia óptima)';
     if (status === 'critical') { statusClass='critical'; statusLabel='Fase crítica (hacia límite)'; }
     if (status === 'expired')  { statusClass='expired';  statusLabel='Vencida'; }
+
+    // Bocadillo: tiempo hasta la fecha LÍMITE siempre
+    const leftLim = task.limitTime - now;
+    let bubClass = 'ok';
+    let bubTimeText = '';
+    if (status === 'expired') {
+      bubClass = 'expired-bub';
+      bubTimeText = '¡Vencida!';
+    } else if (status === 'critical') {
+      bubClass = ''; // rojo por defecto
+      bubTimeText = fmtCountdown(leftLim);
+    } else {
+      bubClass = 'ok'; // azul
+      bubTimeText = fmtCountdown(leftLim);
+    }
 
     const html = `
 <div class="task-card ${status === 'critical' ? 'is-critical' : ''} ${status === 'expired' ? 'is-expired' : ''}" id="card-${task.id}">
@@ -1074,7 +1180,7 @@ function renderList(list) {
       <div class="task-info">
         <div class="task-name-row">
           <div class="task-name" title="${task.name}">${task.name}</div>
-          <div class="category-chip" style="background:${cat.bg};color:${cat.text}">${task.category||'sin categoría'}</div>
+          <div class="category-chip" style="background:${cat.bg};color:${cat.text}">${task.category||'—'}</div>
         </div>
         <div class="task-status-text ${statusClass}" id="status-${task.id}">${statusLabel}</div>
       </div>
@@ -1085,11 +1191,17 @@ function renderList(list) {
       </div>
     </div>
 
-    <!-- Barra de progreso -->
+    <!-- Barra de progreso con bocadillo de fecha límite -->
     <div class="progress-wrap">
       <div class="progress-bg">
         <div class="progress-fill ${status==='critical'||status==='expired'?'danger':''}" id="fill-${task.id}">
-          <div class="bubble" id="bubble-${task.id}">…</div>
+          <!-- bocadillo en la punta de la barra -->
+          <div class="deadline-bubble ${bubClass}" id="dbub-${task.id}">
+            <span class="bub-label">hasta límite</span>
+            <span class="bub-time" id="dbub-time-${task.id}">${bubTimeText}</span>
+          </div>
+          <!-- burbuja antigua oculta (compatibilidad) -->
+          <div class="bubble" id="bubble-${task.id}"></div>
         </div>
       </div>
     </div>
@@ -1165,13 +1277,14 @@ function updateBars(list) {
   const now    = Date.now();
 
   source.forEach(task => {
-    const fill    = document.getElementById(`fill-${task.id}`);
-    const bubble  = document.getElementById(`bubble-${task.id}`);
-    const statusEl= document.getElementById(`status-${task.id}`);
-    const tlFill  = document.getElementById(`tlfilled-${task.id}`);
-    const tlNow   = document.getElementById(`tlnow-${task.id}`);
-    const tlNowLbl= document.getElementById(`tlnow-lbl-${task.id}`);
-    const badge   = document.getElementById(`badge-${task.id}`);
+    const fill     = document.getElementById(`fill-${task.id}`);
+    const statusEl = document.getElementById(`status-${task.id}`);
+    const tlFill   = document.getElementById(`tlfilled-${task.id}`);
+    const tlNow    = document.getElementById(`tlnow-${task.id}`);
+    const tlNowLbl = document.getElementById(`tlnow-lbl-${task.id}`);
+    const badge    = document.getElementById(`badge-${task.id}`);
+    const dbub     = document.getElementById(`dbub-${task.id}`);
+    const dbubTime = document.getElementById(`dbub-time-${task.id}`);
     if (!fill) return;
 
     const total   = task.limitTime - task.startTime;
@@ -1179,33 +1292,47 @@ function updateBars(list) {
     let pct       = Math.max(0.5, Math.min(100, (elapsed / total) * 100));
 
     fill.style.width = `${pct}%`;
-    if (tlFill) tlFill.style.width = `${pct}%`;
-    if (tlNow)  { tlNow.style.left = `${pct}%`; }
+    if (tlFill)   tlFill.style.width = `${pct}%`;
+    if (tlNow)    tlNow.style.left   = `${pct}%`;
     if (tlNowLbl) tlNowLbl.style.left = `${pct}%`;
 
-    const s        = taskStatus(task, now);
-    const leftOpt  = task.optimalTime - now;
-    const leftLim  = task.limitTime   - now;
+    const s       = taskStatus(task, now);
+    const leftLim = task.limitTime - now;
+    const leftOpt = task.optimalTime - now;
     const isUrgent = s !== 'expired' && leftLim <= 86400000;
 
-    // Urgency badge
     if (badge) badge.style.display = isUrgent ? 'block' : 'none';
 
-    // Color classes
-    fill.classList.toggle('danger',   s === 'critical' || s === 'expired');
-    fill.classList.toggle('success',  false);
-    if (tlFill) { tlFill.classList.toggle('danger', s === 'critical' || s === 'expired'); }
+    fill.classList.toggle('danger',  s === 'critical' || s === 'expired');
+    if (tlFill) tlFill.classList.toggle('danger', s === 'critical' || s === 'expired');
 
-    // Bubble + status text
-    if (s === 'expired') {
-      bubble.textContent = '¡Vencida!';
-      if (statusEl) { statusEl.textContent = 'Vencida'; statusEl.className = 'task-status-text expired'; }
-    } else if (s === 'critical') {
-      bubble.textContent = fmtCountdown(leftLim);
-      if (statusEl) { statusEl.textContent = 'Fase crítica (hacia límite)'; statusEl.className = 'task-status-text critical'; }
-    } else {
-      bubble.textContent = fmtCountdown(leftOpt);
-      if (statusEl) { statusEl.textContent = 'A tiempo (hacia óptima)'; statusEl.className = 'task-status-text on-track'; }
+    // Actualizar bocadillo
+    if (dbub && dbubTime) {
+      dbub.classList.remove('ok', 'expired-bub');
+      if (s === 'expired') {
+        dbub.classList.add('expired-bub');
+        dbubTime.textContent = '¡Vencida!';
+      } else if (s === 'critical') {
+        // rojo (sin clase extra, por defecto rojo)
+        dbubTime.textContent = fmtCountdown(leftLim);
+      } else {
+        dbub.classList.add('ok');
+        dbubTime.textContent = fmtCountdown(leftLim);
+      }
+    }
+
+    // Status text
+    if (statusEl) {
+      if (s === 'expired') {
+        statusEl.textContent = 'Vencida';
+        statusEl.className = 'task-status-text expired';
+      } else if (s === 'critical') {
+        statusEl.textContent = 'Fase crítica (hacia límite)';
+        statusEl.className = 'task-status-text critical';
+      } else {
+        statusEl.textContent = 'A tiempo (hacia óptima)';
+        statusEl.className = 'task-status-text on-track';
+      }
     }
   });
 }
@@ -1229,17 +1356,14 @@ function updateStats() {
 // ─────────────────────────────────────────────
 //  INIT
 // ─────────────────────────────────────────────
-let _lastFiltered = [];
 load();
 applyFilters();
 
 setInterval(() => {
   updateBars(tasks);
   updateStats();
-  // re-sort silently every 10s to keep order current
 }, 1000);
 
-// Re-apply filters every 10s to handle sort-order changes
 setInterval(applyFilters, 10000);
 </script>
 </body>
